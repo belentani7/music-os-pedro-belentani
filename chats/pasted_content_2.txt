@@ -1,0 +1,48 @@
+
+Manus 1.6 es gratis por tiempo limitado
+
+Actualizar
+
+Compartir
+chat-Cancionesconalmaycriterio.txt
+Texto · 83.72 KB
+Intenta leer todo el chat y comprender y sacar la Interpretación más asertiva algo que sea universal para cualquier estilo música y que tenga las capacidades y el y el principio de estos artistas que analicen el el la estructura las referencias y que entiendan que no debe traducir las cosas porque cada idioma tiene su tonalidad Su sonoridad Y que pueda construir YY sea un agente casi que independiente que genere pues de forma Personalizada canciones A partir de imagino que de inteligencia artificial y una base de algorítmicas Que funcionen Windows
+Lite
+Entendido. Analizaré el contenido del chat para extraer los principios y la esencia de los artistas mencionados, y así diseñar la propuesta de ese agente musical independiente y universal que solicitas.
+Lite
+¡Tarea completada! Aquí tienes el Agente Compositor Musical Universal, diseñado para generar canciones personalizadas con un criterio artístico avanzado, fusionando estilos de diversos artistas y adaptándose a múltiples idiomas.
+Se adjuntan los siguientes archivos:
+Agente_Compositor_Arquitectura.md: Documento que detalla la arquitectura y los principios de diseño del agente.
+agente_compositor_universal.py: El código Python del agente, incluyendo la interfaz de usuario Streamlit.
+Guia_Uso_Agente_Compositor.md: Una guía completa para instalar, configurar y utilizar el agente en tu sistema local.
+Por favor, revisa la Guia_Uso_Agente_Compositor.md para comenzar a utilizar tu nuevo asistente de composición musical. ¡Espero que disfrutes creando música con él!
+Arquitectura del Agente Compositor Musical Universal
+Este documento detalla la arquitectura de un agente de inteligencia artificial diseñado para componer canciones de manera autónoma y personalizada, integrando principios artísticos y técnicos de diversos géneros y artistas. El objetivo es crear un sistema capaz de generar letras y melodías con un criterio real, adaptándose a diferentes idiomas y estilos musicales, y funcionando de manera robusta en entornos locales.
+1. Principios Fundamentales del Diseño
+El agente se construye sobre los siguientes pilares, extraídos del análisis de las conversaciones previas [1]:
+Pensamiento Nativo del Lenguaje: La composición de letras se realiza directamente en el idioma objetivo, sin procesos de traducción intermedios, para preservar la tonalidad, sonoridad y prosodia intrínseca de cada lengua. Esto asegura que las letras no solo sean gramaticalmente correctas, sino que también resuenen cultural y fonéticamente con el idioma.
+Teoría Musical Avanzada: El agente incorpora un profundo conocimiento de armonía tonal y modal, acordes extendidos y alterados, polirritmias y construcción melódica compleja. Esto permite generar estructuras musicales ricas y sofisticadas, más allá de las progresiones básicas.
+Síntesis Artística Personalizable: La capacidad de fusionar las características distintivas de múltiples artistas (como la teatralidad de Lady Gaga, la melancolía de The Smiths, el groove de Anitta y la tensión armónica de Nathy Peluso) permite al agente crear un perfil artístico único y adaptable a las preferencias del usuario (ej. Pedro Belentani).
+Robustez y Tolerancia a Fallos: El sistema está diseñado para anticipar y manejar errores comunes en la interacción con modelos de lenguaje grandes (LLMs), como la salida de JSON malformado o la generación de acordes inexistentes, garantizando la continuidad y fiabilidad del proceso de composición.
+Independencia y Ejecución Local: El agente está concebido para operar en un entorno local (Windows, Mac, Linux) utilizando modelos de lenguaje de código abierto (como Qwen o Llama) a través de Ollama, lo que le confiere autonomía y elimina la dependencia de servicios en la nube o conexiones a internet constantes para la composición.
+2. Módulos Arquitectónicos
+La arquitectura del agente se divide en los siguientes módulos principales, cada uno con responsabilidades específicas [1]:
+2.1. Módulo de Interacción con LLM (Core AI)
+Este módulo es el cerebro del agente, encargado de interactuar con el modelo de lenguaje grande (LLM) para generar el contenido textual y estructural de la canción. Sus componentes clave son:
+Generador de Prompts Dinámico: Construye prompts complejos y detallados que instruyen al LLM sobre el idioma, tema, BPM, tonalidad y los estilos artísticos a fusionar. Incluye directivas fonéticas específicas para cada idioma y exige una estructura de salida JSON predefinida.
+**Manejo de Respu
+agente_compositor_universal.py
+Código · 9.71 KB
+Guía de Uso: Agente Compositor Musical Universal
+Markdown · 3.54 KB
+Ver todos los archivos en esta tarea
+¿Cómo fue este resultado?
+
+
+
+
+Manus Desktop
+
+Manus is an AI Agent and can make mistakes. Please double-check before use.
+
+Crear PDF Estructurado en Portugués para Marcia - Manus
