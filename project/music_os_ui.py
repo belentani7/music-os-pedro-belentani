@@ -73,7 +73,7 @@ with tab1:
                     # Dashboard de la Canción
                     col_t, col_o, col_c = st.columns(3)
                     with col_t: st.metric("🎶 Título", music_ir.metadata["title"])
-                    with col_o: st.metric("✨ Originalidad", f"{music_ir.metadata['originality_score']}%")
+                    with col_o: st.metric("✨ Originalidad", "No evaluada")
                     with col_c: st.metric("🌍 Idioma", music_ir.lyrics["language"])
                     
                     # Analítica Visual de la Canción
