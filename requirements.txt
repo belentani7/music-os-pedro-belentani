@@ -1,0 +1,6 @@
+# Requisitos para ejecutar Music OS desde su código fuente (Python 3.11+)
+streamlit>=1.40,<2
+ollama>=0.4,<1
+MIDIUtil>=1.2,<2
+pandas>=2.0,<3
+plotly>=5.20,<7
