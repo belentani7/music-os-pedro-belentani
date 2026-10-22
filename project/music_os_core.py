@@ -46,7 +46,27 @@ class MusicOSAgent:
 
     def call_llm(self, prompt: str, system_prompt: str = "") -> str:
         """Llamada al LLM (vía Ollama) con Modo Demo integrado."""
-        # --- MODO DEMO PARA EL SANDBOX ---
+        # Demo output is exclusively opt-in. Real models must never silently
+        # return a canned composition or claim a generation succeeded.
+        if self.model != "demo-mode":
+            try:
+                import ollama
+                response = ollama.chat(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt},
+                    ],
+                    format="json",
+                )
+                return response["message"]["content"]
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Ollama no disponible para el modelo {self.model!r}; "
+                    "inicia Ollama o utiliza demo-mode explícitamente."
+                ) from exc
+
+        # MODO DEMO: only for explicitly chosen model='demo-mode'.
         if "Compositor" in self.name:
             return json.dumps({
                 "title": "Eclipse en la Ciudad",
@@ -88,20 +108,7 @@ class MusicOSAgent:
                 "evolution_metrics": {"creativity_growth": 15, "style_coherence": 92}
             })
         
-        try:
-            import ollama
-            response = ollama.chat(
-                model=self.model,
-                messages=[
-                    {'role': 'system', 'content': system_prompt},
-                    {'role': 'user', 'content': prompt}
-                ],
-                format='json'
-            )
-            return response['message']['content']
-        except Exception:
-            return "{}"
-
+        return "{}"  # Director demo has no generated output.\n
     def _clean_json(self, raw_text):
         start = raw_text.find('{')
         end = raw_text.rfind('}')
@@ -148,7 +155,7 @@ class CompositionAgent(MusicOSAgent):
             music_ir.lyrics["content"] = data.get("lyrics", {})
             music_ir.harmony["chords"] = data.get("chords", {})
             music_ir.production["interpretation"] = data.get("vocal_direction", "")
-        except: pass
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:\n            raise ValueError("La respuesta del agente no es JSON válido.") from exc
 
 class ProductionAgent(MusicOSAgent):
     def produce(self, music_ir: MusicIR):
@@ -161,7 +168,7 @@ class ProductionAgent(MusicOSAgent):
             music_ir.arrangement["instrumentation"] = data.get("instrumentation", {})
             music_ir.arrangement["dynamics"] = data.get("dynamics", {})
             music_ir.arrangement["spatial"] = data.get("spatial", {})
-        except: pass
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:\n            raise ValueError("La respuesta del agente no es JSON válido.") from exc
 
 class LearningAgent(MusicOSAgent):
     """Agente que analiza el historial y evoluciona el sistema."""
@@ -174,7 +181,7 @@ class LearningAgent(MusicOSAgent):
             data = json.loads(self._clean_json(response_json))
             music_ir.memory["learned_patterns"] = data.get("learned_patterns", [])
             music_ir.evaluation["evolution_metrics"] = data.get("evolution_metrics", {})
-        except: pass
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:\n            raise ValueError("La respuesta del agente no es JSON válido.") from exc
 
 # --- MUSIC OS ENGINE ---
 class MusicOS:
