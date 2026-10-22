@@ -45,8 +45,30 @@ class MusicOSAgent:
         self.model = model_name
 
     def call_llm(self, prompt: str, system_prompt: str = "") -> str:
-        """Llamada al LLM (vía Ollama) con Modo Demo integrado."""
-        # --- MODO DEMO PARA EL SANDBOX ---
+        """Use the configured local Ollama model; demo requires explicit opt-in."""
+        if self.model != "demo-mode":
+            try:
+                import ollama
+                response = ollama.chat(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt},
+                    ],
+                    format="json",
+                )
+                content = response["message"]["content"]
+                if not isinstance(content, str) or not content.strip():
+                    raise ValueError("Ollama devolvió una respuesta vacía")
+                return content
+            except Exception as exc:
+                # Never silently substitute a fixed demo song and claim success.
+                raise RuntimeError(
+                    "No se pudo generar con Ollama. Comprueba el servicio local "
+                    "y el modelo seleccionado o elige explícitamente demo-mode."
+                ) from exc
+
+        # --- DEMOSTRACIÓN EXPLÍCITA, NUNCA GENERACIÓN REAL ---
         if "Compositor" in self.name:
             return json.dumps({
                 "title": "Eclipse en la Ciudad",
@@ -88,19 +110,7 @@ class MusicOSAgent:
                 "evolution_metrics": {"creativity_growth": 15, "style_coherence": 92}
             })
         
-        try:
-            import ollama
-            response = ollama.chat(
-                model=self.model,
-                messages=[
-                    {'role': 'system', 'content': system_prompt},
-                    {'role': 'user', 'content': prompt}
-                ],
-                format='json'
-            )
-            return response['message']['content']
-        except Exception:
-            return "{}"
+        raise RuntimeError("El modo demo no implementa este agente")
 
     def _clean_json(self, raw_text):
         start = raw_text.find('{')
