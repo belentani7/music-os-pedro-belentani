@@ -152,13 +152,27 @@ class CompositionAgent(MusicOSAgent):
         response_json = self.call_llm(prompt, system_prompt)
         try:
             data = json.loads(self._clean_json(response_json))
-            music_ir.metadata["title"] = data.get("title", music_ir.metadata["title"])
-            music_ir.metadata["originality_score"] = data.get("originality_score", 0.0)
-            music_ir.musical["sections"] = data.get("structure", [])
-            music_ir.lyrics["content"] = data.get("lyrics", {})
-            music_ir.harmony["chords"] = data.get("chords", {})
-            music_ir.production["interpretation"] = data.get("vocal_direction", "")
-        except: pass
+        except (TypeError, ValueError) as exc:
+            raise ValueError("El compositor no devolvió JSON válido") from exc
+        if (not isinstance(data, dict) or
+                not isinstance(data.get("structure"), list) or
+                not data["structure"] or
+                not all(isinstance(section, str) and section for section in data["structure"]) or
+                not isinstance(data.get("lyrics"), dict) or
+                not isinstance(data.get("chords"), dict) or
+                any(not isinstance(data["lyrics"].get(section), str) or
+                    not data["lyrics"].get(section) or
+                    not isinstance(data["chords"].get(section), list) or
+                    not data["chords"].get(section)
+                    for section in data["structure"])):
+            raise ValueError("La composición carece de secciones, letras o acordes completos")
+        music_ir.metadata["title"] = str(data.get("title") or music_ir.metadata["title"])
+        # A model-provided originality number is not an independent evaluation.
+        music_ir.metadata["originality_score"] = 0.0
+        music_ir.musical["sections"] = data["structure"]
+        music_ir.lyrics["content"] = data["lyrics"]
+        music_ir.harmony["chords"] = data["chords"]
+        music_ir.production["interpretation"] = str(data.get("vocal_direction") or "")
 
 class ProductionAgent(MusicOSAgent):
     def produce(self, music_ir: MusicIR):
