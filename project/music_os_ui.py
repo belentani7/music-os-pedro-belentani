@@ -47,10 +47,20 @@ with st.sidebar:
     st.markdown("### 🤖 Cerebro Local")
     model = st.text_input("Modelo Ollama", value="qwen2.5:7b")
     
-    if st.button("🗑️ Limpiar Historial de Aprendizaje"):
-        if os.path.exists("music_os_history.json"):
-            os.remove("music_os_history.json")
-            st.success("Memoria reseteada.")
+    confirm_clear = st.checkbox(
+        "Confirmo que deseo borrar permanentemente el historial local de canciones",
+        key="music_os_confirm_clear",
+    )
+    if st.button("🗑️ Borrar historial local", disabled=not confirm_clear):
+        try:
+            if os.path.exists("music_os_history.json"):
+                os.remove("music_os_history.json")
+                st.success("Historial local borrado.")
+            else:
+                st.info("No existe historial local que borrar.")
+            st.rerun()
+        except OSError:
+            st.error("No se pudo borrar el historial. Revisa los permisos del archivo.")
 
 # --- ÁREA CENTRAL ---
 tab1, tab2, tab3 = st.tabs(["🎵 Composición", "🧠 Aprendizaje", "🗄️ Historial"])
