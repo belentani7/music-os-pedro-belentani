@@ -108,6 +108,8 @@ with tab1:
         # Keep results and download buttons available across Streamlit reruns.
         music_ir = last_result["ir"]
         st.caption("Última composición generada en esta sesión")
+        for warning in music_ir.evaluation.get("feedback", []):
+            st.warning(str(warning))
         if last_result["demo"]:
             st.info("Demostración completada: composición de ejemplo, sin generación original.")
         else:
