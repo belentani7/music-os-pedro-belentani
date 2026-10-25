@@ -3,6 +3,7 @@ import re
 import sys
 import io
 import os
+import tempfile
 from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Any, Optional
 from midiutil import MIDIFile
@@ -211,16 +212,35 @@ class MusicOS:
         self.history_file = "music_os_history.json"
 
     def _load_history(self) -> List[Dict]:
-        if os.path.exists(self.history_file):
-            with open(self.history_file, "r") as f:
-                return json.load(f)
-        return []
+        if not os.path.exists(self.history_file):
+            return []
+        with open(self.history_file, "r", encoding="utf-8") as history_file:
+            history = json.load(history_file)
+        if not isinstance(history, list) or any(not isinstance(item, dict) for item in history):
+            raise ValueError("El historial tiene un formato inválido; no se sobrescribirá.")
+        return history
 
     def _save_to_history(self, music_ir: MusicIR):
+        # Never truncate a user's unpublished songs before the replacement is ready.
         history = self._load_history()
         history.append(asdict(music_ir))
-        with open(self.history_file, "w") as f:
-            json.dump(history, f, indent=2)
+        destination = os.path.abspath(self.history_file)
+        temporary_path = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", dir=os.path.dirname(destination),
+                prefix=".music-os-history-", suffix=".tmp", delete=False,
+            ) as temporary_file:
+                temporary_path = temporary_file.name
+                json.dump(history, temporary_file, indent=2, ensure_ascii=False)
+                temporary_file.flush()
+                os.fsync(temporary_file.fileno())
+            if os.name == "posix":
+                os.chmod(temporary_path, 0o600)
+            os.replace(temporary_path, destination)
+        finally:
+            if temporary_path and os.path.exists(temporary_path):
+                os.unlink(temporary_path)
 
     def generate_project(self, theme: str, styles: List[str], language: str, bpm: int, key: str, creativity: int):
         self.music_ir = MusicIR() # Reset para nueva canción
