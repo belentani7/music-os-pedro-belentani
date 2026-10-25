@@ -50,20 +50,33 @@ with st.sidebar:
     if model.strip() == "demo-mode":
         st.warning("Modo DEMO: genera siempre la misma canción de ejemplo, no una obra nueva.")
     
+    def clear_local_history():
+        if not st.session_state.get("music_os_confirm_clear", False):
+            return
+        try:
+            if os.path.exists("music_os_history.json"):
+                os.remove("music_os_history.json")
+                st.session_state["music_os_history_clear_status"] = "deleted"
+            else:
+                st.session_state["music_os_history_clear_status"] = "missing"
+        except OSError:
+            st.session_state["music_os_history_clear_status"] = "error"
+        finally:
+            # Callback runs before widgets are rebuilt, so consent never persists.
+            st.session_state["music_os_confirm_clear"] = False
+
     confirm_clear = st.checkbox(
         "Confirmo que deseo borrar permanentemente el historial local de canciones",
         key="music_os_confirm_clear",
     )
-    if st.button("🗑️ Borrar historial local", disabled=not confirm_clear):
-        try:
-            if os.path.exists("music_os_history.json"):
-                os.remove("music_os_history.json")
-                st.success("Historial local borrado.")
-            else:
-                st.info("No existe historial local que borrar.")
-            st.rerun()
-        except OSError:
-            st.error("No se pudo borrar el historial. Revisa los permisos del archivo.")
+    st.button("🗑️ Borrar historial local", disabled=not confirm_clear, on_click=clear_local_history)
+    clear_status = st.session_state.pop("music_os_history_clear_status", None)
+    if clear_status == "deleted":
+        st.success("Historial local borrado.")
+    elif clear_status == "missing":
+        st.info("No existe historial local que borrar.")
+    elif clear_status == "error":
+        st.error("No se pudo borrar el historial. Revisa los permisos del archivo.")
 
 # --- ÁREA CENTRAL ---
 tab1, tab2, tab3 = st.tabs(["🎵 Composición", "🧠 Aprendizaje", "🗄️ Historial"])
