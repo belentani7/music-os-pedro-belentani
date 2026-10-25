@@ -81,57 +81,69 @@ with tab1:
                     mos = MusicOS(model_name=model)
                     music_ir = mos.generate_project(theme, styles, language, bpm, key, creativity)
                     
-                    if model.strip() == "demo-mode":
-                        st.info("Demostración completada: composición de ejemplo, sin generación original.")
-                    else:
-                        st.success("Composición recibida de Ollama local. Revisa los resultados antes de utilizarlos.")
-                    
-                    # Dashboard de la Canción
-                    col_t, col_o, col_c = st.columns(3)
-                    with col_t: st.metric("🎶 Título", music_ir.metadata["title"])
-                    with col_o: st.metric("✨ Originalidad", "No evaluada")
-                    with col_c: st.metric("🌍 Idioma", music_ir.lyrics["language"])
-                    
-                    # Analítica Visual de la Canción
-                    st.subheader("📊 Análisis de dinámica y energía")
-                    dyn_data = music_ir.arrangement.get("dynamics", {})
-                    if dyn_data:
-                        df_dyn = pd.DataFrame(list(dyn_data.items()), columns=['Sección', 'Energía'])
-                        fig_dyn = px.line(df_dyn, x='Sección', y='Energía', markers=True, 
-                                         title="Curva de Dinámica Belentani",
-                                         color_discrete_sequence=['#1DB954'])
-                        fig_dyn.update_layout(template="plotly_dark", plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
-                        st.plotly_chart(fig_dyn, use_container_width=True)
-                        with st.expander("Ver datos de dinámica en tabla"):
-                            st.dataframe(df_dyn, hide_index=True, use_container_width=True)
-                    
-                    # Letra y Producción
-                    st.markdown("---")
-                    c1, c2 = st.columns([2, 1])
-                    with c1:
-                        st.markdown("**📖 Letra y Estructura:**")
-                        for sec in music_ir.musical["sections"]:
-                            with st.expander(f"🎼 {sec.upper()} | {', '.join(music_ir.harmony['chords'].get(sec, []))}"):
-                                st.write(music_ir.lyrics["content"].get(sec, ""))
-                    with c2:
-                        st.markdown("**🎛️ Producción y Arreglos:**")
-                        st.info(f"🗣️ **Voz:** {music_ir.production['interpretation']}")
-                        st.json(music_ir.arrangement["instrumentation"])
-                    
-                    # Descargas
-                    st.markdown("---")
-                    d1, d2, d3 = st.columns(3)
-                    title_slug = re.sub(r"[^a-zA-Z0-9._-]+", "-", str(music_ir.metadata.get("title") or "cancion")).strip("._-")[:80] or "cancion"
-                    lyrics_text = "\n\n".join(
-                        f"[{section}]\n{music_ir.lyrics['content'].get(section, '')}"
-                        for section in music_ir.musical["sections"]
-                    )
-                    d1.download_button("🎹 Descargar MIDI", mos.export_midi(), f"music-os-{title_slug}.mid", mime="audio/midi")
-                    d2.download_button("📄 Descargar letra (TXT)", lyrics_text, f"music-os-{title_slug}-letra.txt", mime="text/plain")
-                    d3.download_button("📋 Music IR (JSON)", music_ir.to_json(), f"music-os-{title_slug}-ir.json", mime="application/json")
-                    
+                    st.session_state["music_os_last_result"] = {
+                        "ir": music_ir,
+                        "midi": mos.export_midi(),
+                        "demo": model.strip() == "demo-mode",
+                    }
+
                 except Exception as e:
                     st.error(f"Error: {e}")
+
+    last_result = st.session_state.get("music_os_last_result")
+    if last_result is not None:
+        # Keep results and download buttons available across Streamlit reruns.
+        music_ir = last_result["ir"]
+        st.caption("Última composición generada en esta sesión")
+        if last_result["demo"]:
+            st.info("Demostración completada: composición de ejemplo, sin generación original.")
+        else:
+            st.success("Composición recibida de Ollama local. Revisa los resultados antes de utilizarlos.")
+        
+        # Dashboard de la Canción
+        col_t, col_o, col_c = st.columns(3)
+        with col_t: st.metric("🎶 Título", music_ir.metadata["title"])
+        with col_o: st.metric("✨ Originalidad", "No evaluada")
+        with col_c: st.metric("🌍 Idioma", music_ir.lyrics["language"])
+        
+        # Analítica Visual de la Canción
+        st.subheader("📊 Análisis de dinámica y energía")
+        dyn_data = music_ir.arrangement.get("dynamics", {})
+        if dyn_data:
+            df_dyn = pd.DataFrame(list(dyn_data.items()), columns=['Sección', 'Energía'])
+            fig_dyn = px.line(df_dyn, x='Sección', y='Energía', markers=True, 
+                             title="Curva de Dinámica Belentani",
+                             color_discrete_sequence=['#1DB954'])
+            fig_dyn.update_layout(template="plotly_dark", plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+            st.plotly_chart(fig_dyn, use_container_width=True)
+            with st.expander("Ver datos de dinámica en tabla"):
+                st.dataframe(df_dyn, hide_index=True, use_container_width=True)
+        
+        # Letra y Producción
+        st.markdown("---")
+        c1, c2 = st.columns([2, 1])
+        with c1:
+            st.markdown("**📖 Letra y Estructura:**")
+            for sec in music_ir.musical["sections"]:
+                with st.expander(f"🎼 {sec.upper()} | {', '.join(music_ir.harmony['chords'].get(sec, []))}"):
+                    st.write(music_ir.lyrics["content"].get(sec, ""))
+        with c2:
+            st.markdown("**🎛️ Producción y Arreglos:**")
+            st.info(f"🗣️ **Voz:** {music_ir.production['interpretation']}")
+            st.json(music_ir.arrangement["instrumentation"])
+        
+        # Descargas
+        st.markdown("---")
+        d1, d2, d3 = st.columns(3)
+        title_slug = re.sub(r"[^a-zA-Z0-9._-]+", "-", str(music_ir.metadata.get("title") or "cancion")).strip("._-")[:80] or "cancion"
+        lyrics_text = "\n\n".join(
+            f"[{section}]\n{music_ir.lyrics['content'].get(section, '')}"
+            for section in music_ir.musical["sections"]
+        )
+        d1.download_button("🎹 Descargar MIDI", last_result["midi"], f"music-os-{title_slug}.mid", mime="audio/midi")
+        d2.download_button("📄 Descargar letra (TXT)", lyrics_text, f"music-os-{title_slug}-letra.txt", mime="text/plain")
+        d3.download_button("📋 Music IR (JSON)", music_ir.to_json(), f"music-os-{title_slug}-ir.json", mime="application/json")
+
 
 try:
     saved_history = MusicOS()._load_history()
