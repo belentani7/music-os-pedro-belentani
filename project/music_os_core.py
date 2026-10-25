@@ -192,7 +192,24 @@ class LearningAgent(MusicOSAgent):
     """Agente que analiza el historial y evoluciona el sistema."""
     def evolve(self, music_ir: MusicIR, history: List[Dict]):
         system_prompt = "Eres el AGENTE DE APRENDIZAJE de MUSIC OS. Analiza el historial y evoluciona patrones."
-        prompt = f"Historial: {json.dumps(history)}. Canción actual: {music_ir.to_json()}. Identifica patrones aprendidos y métricas de evolución. Devuelve JSON con learned_patterns, evolution_metrics."
+        # Do not send all previous unpublished lyrics or titles to the model.
+        # Only recent musical parameters are relevant to identifying patterns.
+        history_summary = []
+        for entry in history[-5:]:
+            metadata = entry.get("metadata", {})
+            musical = entry.get("musical", {})
+            if not isinstance(metadata, dict) or not isinstance(musical, dict):
+                continue
+            history_summary.append({
+                "styles": metadata.get("styles", []),
+                "bpm": musical.get("bpm"),
+                "key": musical.get("key"),
+            })
+        prompt = (
+            f"Historial musical resumido (sin letras ni títulos): {json.dumps(history_summary, ensure_ascii=False)}. "
+            f"Canción actual: {music_ir.to_json()}. "
+            "Identifica patrones sugeridos y métricas estimadas; devuelve JSON con learned_patterns, evolution_metrics."
+        )
         
         response_json = self.call_llm(prompt, system_prompt)
         try:
