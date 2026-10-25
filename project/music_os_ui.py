@@ -122,8 +122,8 @@ with tab1:
                     st.markdown("---")
                     d1, d2, d3 = st.columns(3)
                     title_slug = re.sub(r"[^a-zA-Z0-9._-]+", "-", str(music_ir.metadata.get("title") or "cancion")).strip("._-")[:80] or "cancion"
-                    lyrics_text = "\\n\\n".join(
-                        f"[{section}]\\n{music_ir.lyrics['content'].get(section, '')}"
+                    lyrics_text = "\n\n".join(
+                        f"[{section}]\n{music_ir.lyrics['content'].get(section, '')}"
                         for section in music_ir.musical["sections"]
                     )
                     d1.download_button("🎹 Descargar MIDI", mos.export_midi(), f"music-os-{title_slug}.mid", mime="audio/midi")
