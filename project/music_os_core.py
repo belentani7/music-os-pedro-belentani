@@ -183,10 +183,18 @@ class ProductionAgent(MusicOSAgent):
         response_json = self.call_llm(prompt, system_prompt)
         try:
             data = json.loads(self._clean_json(response_json))
+            if not isinstance(data, dict) or any(
+                not isinstance(data.get(field, {}), dict)
+                for field in ("instrumentation", "dynamics", "spatial")
+            ):
+                raise ValueError("Arreglo no estructurado")
             music_ir.arrangement["instrumentation"] = data.get("instrumentation", {})
             music_ir.arrangement["dynamics"] = data.get("dynamics", {})
             music_ir.arrangement["spatial"] = data.get("spatial", {})
-        except: pass
+        except (TypeError, ValueError):
+            music_ir.evaluation["feedback"].append(
+                "El modelo no devolvió arreglos válidos; la composición está incompleta."
+            )
 
 class LearningAgent(MusicOSAgent):
     """Agente que analiza el historial y evoluciona el sistema."""
@@ -214,9 +222,16 @@ class LearningAgent(MusicOSAgent):
         response_json = self.call_llm(prompt, system_prompt)
         try:
             data = json.loads(self._clean_json(response_json))
+            if (not isinstance(data, dict) or
+                    not isinstance(data.get("learned_patterns", []), list) or
+                    not isinstance(data.get("evolution_metrics", {}), dict)):
+                raise ValueError("Análisis no estructurado")
             music_ir.memory["learned_patterns"] = data.get("learned_patterns", [])
             music_ir.evaluation["evolution_metrics"] = data.get("evolution_metrics", {})
-        except: pass
+        except (TypeError, ValueError):
+            music_ir.evaluation["feedback"].append(
+                "El modelo no devolvió un análisis válido; no se actualizaron los patrones."
+            )
 
 # --- MUSIC OS ENGINE ---
 class MusicOS:
