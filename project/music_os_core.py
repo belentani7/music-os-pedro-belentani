@@ -3,6 +3,7 @@ import re
 import sys
 import io
 import os
+import tempfile
 from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Any, Optional
 from midiutil import MIDIFile
@@ -45,9 +46,7 @@ class MusicOSAgent:
         self.model = model_name
 
     def call_llm(self, prompt: str, system_prompt: str = "") -> str:
-        """Llamada al LLM (vía Ollama) con Modo Demo integrado."""
-        # Demo output is exclusively opt-in. Real models must never silently
-        # return a canned composition or claim a generation succeeded.
+        """Use the configured local Ollama model; demo requires explicit opt-in."""
         if self.model != "demo-mode":
             try:
                 import ollama
@@ -59,14 +58,18 @@ class MusicOSAgent:
                     ],
                     format="json",
                 )
-                return response["message"]["content"]
+                content = response["message"]["content"]
+                if not isinstance(content, str) or not content.strip():
+                    raise ValueError("Ollama devolvió una respuesta vacía")
+                return content
             except Exception as exc:
+                # Never silently substitute a fixed demo song and claim success.
                 raise RuntimeError(
-                    f"Ollama no disponible para el modelo {self.model!r}; "
-                    "inicia Ollama o utiliza demo-mode explícitamente."
+                    "No se pudo generar con Ollama. Comprueba el servicio local "
+                    "y el modelo seleccionado o elige explícitamente demo-mode."
                 ) from exc
 
-        # MODO DEMO: only for explicitly chosen model='demo-mode'.
+        # --- DEMOSTRACIÓN EXPLÍCITA, NUNCA GENERACIÓN REAL ---
         if "Compositor" in self.name:
             return json.dumps({
                 "title": "Eclipse en la Ciudad",
@@ -108,7 +111,8 @@ class MusicOSAgent:
                 "evolution_metrics": {"creativity_growth": 15, "style_coherence": 92}
             })
         
-        return "{}"  # Director demo has no generated output.\n
+        raise RuntimeError("El modo demo no implementa este agente")
+
     def _clean_json(self, raw_text):
         start = raw_text.find('{')
         end = raw_text.rfind('}')
@@ -149,13 +153,27 @@ class CompositionAgent(MusicOSAgent):
         response_json = self.call_llm(prompt, system_prompt)
         try:
             data = json.loads(self._clean_json(response_json))
-            music_ir.metadata["title"] = data.get("title", music_ir.metadata["title"])
-            music_ir.metadata["originality_score"] = data.get("originality_score", 0.0)
-            music_ir.musical["sections"] = data.get("structure", [])
-            music_ir.lyrics["content"] = data.get("lyrics", {})
-            music_ir.harmony["chords"] = data.get("chords", {})
-            music_ir.production["interpretation"] = data.get("vocal_direction", "")
-        except (json.JSONDecodeError, TypeError, ValueError) as exc:\n            raise ValueError("La respuesta del agente no es JSON válido.") from exc
+        except (TypeError, ValueError) as exc:
+            raise ValueError("El compositor no devolvió JSON válido") from exc
+        if (not isinstance(data, dict) or
+                not isinstance(data.get("structure"), list) or
+                not data["structure"] or
+                not all(isinstance(section, str) and section for section in data["structure"]) or
+                not isinstance(data.get("lyrics"), dict) or
+                not isinstance(data.get("chords"), dict) or
+                any(not isinstance(data["lyrics"].get(section), str) or
+                    not data["lyrics"].get(section) or
+                    not isinstance(data["chords"].get(section), list) or
+                    not data["chords"].get(section)
+                    for section in data["structure"])):
+            raise ValueError("La composición carece de secciones, letras o acordes completos")
+        music_ir.metadata["title"] = str(data.get("title") or music_ir.metadata["title"])
+        # A model-provided originality number is not an independent evaluation.
+        music_ir.metadata["originality_score"] = 0.0
+        music_ir.musical["sections"] = data["structure"]
+        music_ir.lyrics["content"] = data["lyrics"]
+        music_ir.harmony["chords"] = data["chords"]
+        music_ir.production["interpretation"] = str(data.get("vocal_direction") or "")
 
 class ProductionAgent(MusicOSAgent):
     def produce(self, music_ir: MusicIR):
@@ -165,23 +183,55 @@ class ProductionAgent(MusicOSAgent):
         response_json = self.call_llm(prompt, system_prompt)
         try:
             data = json.loads(self._clean_json(response_json))
+            if not isinstance(data, dict) or any(
+                not isinstance(data.get(field, {}), dict)
+                for field in ("instrumentation", "dynamics", "spatial")
+            ):
+                raise ValueError("Arreglo no estructurado")
             music_ir.arrangement["instrumentation"] = data.get("instrumentation", {})
             music_ir.arrangement["dynamics"] = data.get("dynamics", {})
             music_ir.arrangement["spatial"] = data.get("spatial", {})
-        except (json.JSONDecodeError, TypeError, ValueError) as exc:\n            raise ValueError("La respuesta del agente no es JSON válido.") from exc
+        except (TypeError, ValueError):
+            music_ir.evaluation["feedback"].append(
+                "El modelo no devolvió arreglos válidos; la composición está incompleta."
+            )
 
 class LearningAgent(MusicOSAgent):
     """Agente que analiza el historial y evoluciona el sistema."""
     def evolve(self, music_ir: MusicIR, history: List[Dict]):
         system_prompt = "Eres el AGENTE DE APRENDIZAJE de MUSIC OS. Analiza el historial y evoluciona patrones."
-        prompt = f"Historial: {json.dumps(history)}. Canción actual: {music_ir.to_json()}. Identifica patrones aprendidos y métricas de evolución. Devuelve JSON con learned_patterns, evolution_metrics."
+        # Do not send all previous unpublished lyrics or titles to the model.
+        # Only recent musical parameters are relevant to identifying patterns.
+        history_summary = []
+        for entry in history[-5:]:
+            metadata = entry.get("metadata", {})
+            musical = entry.get("musical", {})
+            if not isinstance(metadata, dict) or not isinstance(musical, dict):
+                continue
+            history_summary.append({
+                "styles": metadata.get("styles", []),
+                "bpm": musical.get("bpm"),
+                "key": musical.get("key"),
+            })
+        prompt = (
+            f"Historial musical resumido (sin letras ni títulos): {json.dumps(history_summary, ensure_ascii=False)}. "
+            f"Canción actual: {music_ir.to_json()}. "
+            "Identifica patrones sugeridos y métricas estimadas; devuelve JSON con learned_patterns, evolution_metrics."
+        )
         
         response_json = self.call_llm(prompt, system_prompt)
         try:
             data = json.loads(self._clean_json(response_json))
+            if (not isinstance(data, dict) or
+                    not isinstance(data.get("learned_patterns", []), list) or
+                    not isinstance(data.get("evolution_metrics", {}), dict)):
+                raise ValueError("Análisis no estructurado")
             music_ir.memory["learned_patterns"] = data.get("learned_patterns", [])
             music_ir.evaluation["evolution_metrics"] = data.get("evolution_metrics", {})
-        except (json.JSONDecodeError, TypeError, ValueError) as exc:\n            raise ValueError("La respuesta del agente no es JSON válido.") from exc
+        except (TypeError, ValueError):
+            music_ir.evaluation["feedback"].append(
+                "El modelo no devolvió un análisis válido; no se actualizaron los patrones."
+            )
 
 # --- MUSIC OS ENGINE ---
 class MusicOS:
@@ -194,16 +244,35 @@ class MusicOS:
         self.history_file = "music_os_history.json"
 
     def _load_history(self) -> List[Dict]:
-        if os.path.exists(self.history_file):
-            with open(self.history_file, "r") as f:
-                return json.load(f)
-        return []
+        if not os.path.exists(self.history_file):
+            return []
+        with open(self.history_file, "r", encoding="utf-8") as history_file:
+            history = json.load(history_file)
+        if not isinstance(history, list) or any(not isinstance(item, dict) for item in history):
+            raise ValueError("El historial tiene un formato inválido; no se sobrescribirá.")
+        return history
 
     def _save_to_history(self, music_ir: MusicIR):
+        # Never truncate a user's unpublished songs before the replacement is ready.
         history = self._load_history()
         history.append(asdict(music_ir))
-        with open(self.history_file, "w") as f:
-            json.dump(history, f, indent=2)
+        destination = os.path.abspath(self.history_file)
+        temporary_path = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", dir=os.path.dirname(destination),
+                prefix=".music-os-history-", suffix=".tmp", delete=False,
+            ) as temporary_file:
+                temporary_path = temporary_file.name
+                json.dump(history, temporary_file, indent=2, ensure_ascii=False)
+                temporary_file.flush()
+                os.fsync(temporary_file.fileno())
+            if os.name == "posix":
+                os.chmod(temporary_path, 0o600)
+            os.replace(temporary_path, destination)
+        finally:
+            if temporary_path and os.path.exists(temporary_path):
+                os.unlink(temporary_path)
 
     def generate_project(self, theme: str, styles: List[str], language: str, bpm: int, key: str, creativity: int):
         self.music_ir = MusicIR() # Reset para nueva canción
@@ -217,7 +286,7 @@ class MusicOS:
         if history:
             last_entry = history[-1]
             self.music_ir.memory["learned_patterns"] = last_entry.get("memory", {}).get("learned_patterns", [])
-            self.music_ir.memory["past_references"] = [h["metadata"]["title"] for h in history[-5:]]
+            # Previous titles remain in the local history; they are not copied into model prompts.
         
         self.director.set_goal(self.music_ir, theme, styles, creativity)
         self.composer.compose(self.music_ir)
