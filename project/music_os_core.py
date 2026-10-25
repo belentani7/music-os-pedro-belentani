@@ -271,7 +271,7 @@ class MusicOS:
         if history:
             last_entry = history[-1]
             self.music_ir.memory["learned_patterns"] = last_entry.get("memory", {}).get("learned_patterns", [])
-            self.music_ir.memory["past_references"] = [h["metadata"]["title"] for h in history[-5:]]
+            # Previous titles remain in the local history; they are not copied into model prompts.
         
         self.director.set_goal(self.music_ir, theme, styles, creativity)
         self.composer.compose(self.music_ir)
