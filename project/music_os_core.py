@@ -155,7 +155,8 @@ class CompositionAgent(MusicOSAgent):
             music_ir.lyrics["content"] = data.get("lyrics", {})
             music_ir.harmony["chords"] = data.get("chords", {})
             music_ir.production["interpretation"] = data.get("vocal_direction", "")
-        except (json.JSONDecodeError, TypeError, ValueError) as exc:\n            raise ValueError("La respuesta del agente no es JSON válido.") from exc
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            raise ValueError("La respuesta del agente no es JSON válido.") from exc
 
 class ProductionAgent(MusicOSAgent):
     def produce(self, music_ir: MusicIR):
@@ -168,7 +169,8 @@ class ProductionAgent(MusicOSAgent):
             music_ir.arrangement["instrumentation"] = data.get("instrumentation", {})
             music_ir.arrangement["dynamics"] = data.get("dynamics", {})
             music_ir.arrangement["spatial"] = data.get("spatial", {})
-        except (json.JSONDecodeError, TypeError, ValueError) as exc:\n            raise ValueError("La respuesta del agente no es JSON válido.") from exc
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            raise ValueError("La respuesta del agente no es JSON válido.") from exc
 
 class LearningAgent(MusicOSAgent):
     """Agente que analiza el historial y evoluciona el sistema."""
@@ -181,7 +183,8 @@ class LearningAgent(MusicOSAgent):
             data = json.loads(self._clean_json(response_json))
             music_ir.memory["learned_patterns"] = data.get("learned_patterns", [])
             music_ir.evaluation["evolution_metrics"] = data.get("evolution_metrics", {})
-        except (json.JSONDecodeError, TypeError, ValueError) as exc:\n            raise ValueError("La respuesta del agente no es JSON válido.") from exc
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            raise ValueError("La respuesta del agente no es JSON válido.") from exc
 
 # --- MUSIC OS ENGINE ---
 class MusicOS:
