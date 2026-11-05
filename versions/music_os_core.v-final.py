@@ -1,17 +1,17 @@
-import json
-import re
-import sys
 import io
+import json
 import os
-from dataclasses import dataclass, field, asdict
-from typing import List, Dict, Any, Optional
+from dataclasses import asdict, dataclass, field
+from typing import Any
+
 from midiutil import MIDIFile
+
 
 # --- MUSIC IR (Representación Intermedia) ---
 @dataclass
 class MusicIR:
     """Gemelo Digital de la Canción: Una única fuente de verdad para la obra musical."""
-    metadata: Dict[str, Any] = field(default_factory=lambda: {
+    metadata: dict[str, Any] = field(default_factory=lambda: {
         "title": "Sin Título", 
         "artist": "Pedro Belentani", 
         "version": "1.0",
@@ -19,15 +19,15 @@ class MusicIR:
         "originality_score": 0.0,
         "creativity_level": 50
     })
-    concept: Dict[str, str] = field(default_factory=lambda: {"emotion": "", "objective": "", "core_idea": ""})
-    musical: Dict[str, Any] = field(default_factory=lambda: {"key": "Am", "bpm": 105, "meter": "4/4", "sections": []})
-    lyrics: Dict[str, Any] = field(default_factory=lambda: {"language": "Español", "content": {}, "phonetics": {}, "prosody": {}})
-    harmony: Dict[str, Any] = field(default_factory=lambda: {"chords": {}, "tension": []})
-    melody: Dict[str, Any] = field(default_factory=lambda: {"notes": {}, "phrasing": {}})
-    arrangement: Dict[str, Any] = field(default_factory=lambda: {"instrumentation": {}, "dynamics": {}, "spatial": {}, "automations": []})
-    production: Dict[str, Any] = field(default_factory=lambda: {"mix": {}, "interpretation": {}, "sound_design": []})
-    evaluation: Dict[str, Any] = field(default_factory=lambda: {"score": 0.0, "feedback": [], "evolution_metrics": {}})
-    memory: Dict[str, Any] = field(default_factory=lambda: {"past_references": [], "learned_patterns": []})
+    concept: dict[str, str] = field(default_factory=lambda: {"emotion": "", "objective": "", "core_idea": ""})
+    musical: dict[str, Any] = field(default_factory=lambda: {"key": "Am", "bpm": 105, "meter": "4/4", "sections": []})
+    lyrics: dict[str, Any] = field(default_factory=lambda: {"language": "Español", "content": {}, "phonetics": {}, "prosody": {}})
+    harmony: dict[str, Any] = field(default_factory=lambda: {"chords": {}, "tension": []})
+    melody: dict[str, Any] = field(default_factory=lambda: {"notes": {}, "phrasing": {}})
+    arrangement: dict[str, Any] = field(default_factory=lambda: {"instrumentation": {}, "dynamics": {}, "spatial": {}, "automations": []})
+    production: dict[str, Any] = field(default_factory=lambda: {"mix": {}, "interpretation": {}, "sound_design": []})
+    evaluation: dict[str, Any] = field(default_factory=lambda: {"score": 0.0, "feedback": [], "evolution_metrics": {}})
+    memory: dict[str, Any] = field(default_factory=lambda: {"past_references": [], "learned_patterns": []})
 
     def to_json(self):
         return json.dumps(asdict(self), indent=2)
@@ -108,7 +108,7 @@ class MusicOSAgent:
         return raw_text[start:end+1] if start != -1 and end != -1 else raw_text
 
 class DirectorAgent(MusicOSAgent):
-    def set_goal(self, music_ir: MusicIR, theme: str, styles: List[str], creativity_level: int):
+    def set_goal(self, music_ir: MusicIR, theme: str, styles: list[str], creativity_level: int):
         music_ir.concept["core_idea"] = theme
         music_ir.metadata["styles"] = styles
         music_ir.metadata["creativity_level"] = creativity_level
@@ -165,7 +165,7 @@ class ProductionAgent(MusicOSAgent):
 
 class LearningAgent(MusicOSAgent):
     """Agente que analiza el historial y evoluciona el sistema."""
-    def evolve(self, music_ir: MusicIR, history: List[Dict]):
+    def evolve(self, music_ir: MusicIR, history: list[dict]):
         system_prompt = "Eres el AGENTE DE APRENDIZAJE de MUSIC OS. Analiza el historial y evoluciona patrones."
         prompt = f"Historial: {json.dumps(history)}. Canción actual: {music_ir.to_json()}. Identifica patrones aprendidos y métricas de evolución. Devuelve JSON con learned_patterns, evolution_metrics."
         
@@ -186,7 +186,7 @@ class MusicOS:
         self.learner = LearningAgent("Aprendizaje", model_name)
         self.history_file = "music_os_history.json"
 
-    def _load_history(self) -> List[Dict]:
+    def _load_history(self) -> list[dict]:
         if os.path.exists(self.history_file):
             with open(self.history_file, "r") as f:
                 return json.load(f)
@@ -198,7 +198,7 @@ class MusicOS:
         with open(self.history_file, "w") as f:
             json.dump(history, f, indent=2)
 
-    def generate_project(self, theme: str, styles: List[str], language: str, bpm: int, key: str, creativity: int):
+    def generate_project(self, theme: str, styles: list[str], language: str, bpm: int, key: str, creativity: int):
         self.music_ir = MusicIR() # Reset para nueva canción
         self.music_ir.lyrics["language"] = language
         self.music_ir.musical["bpm"] = bpm
