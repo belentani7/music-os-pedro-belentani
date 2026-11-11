@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import io
 import json
 import os
@@ -12,8 +13,8 @@ from midiutil import MIDIFile
 class MusicIR:
     """Gemelo Digital de la Canción: Una única fuente de verdad para la obra musical."""
     metadata: dict[str, Any] = field(default_factory=lambda: {
-        "title": "Sin Título", 
-        "artist": "Pedro Belentani", 
+        "title": "Sin Título",
+        "artist": "Pedro Belentani",
         "version": "1.0",
         "styles": [],
         "originality_score": 0.0,
@@ -107,7 +108,7 @@ class MusicOSAgent:
                 "learned_patterns": ["Uso recurrente de Am9 para melancolía", "Preferencia por estribillos explosivos a 90% dinámica"],
                 "evolution_metrics": {"creativity_growth": 15, "style_coherence": 92}
             })
-        
+
         return "{}"  # Director demo has no generated output.\n
     def _clean_json(self, raw_text):
         start = raw_text.find('{')
@@ -131,21 +132,21 @@ class CompositionAgent(MusicOSAgent):
         learned_context = "\n".join([f"- {p}" for p in music_ir.memory.get("learned_patterns", [])])
 
         system_prompt = f"""
-        Eres el AGENTE DE COMPOSICIÓN de MUSIC OS v1.0. 
-        Creatividad: {creativity}%. 
+        Eres el AGENTE DE COMPOSICIÓN de MUSIC OS v1.0.
+        Creatividad: {creativity}%.
         Pensamiento Nativo: {language}.
-        
+
         CONTEXTO EVOLUTIVO (PATRONES APRENDIDOS):
         {learned_context if learned_context else "Ninguno todavía. Establece las bases."}
-        
+
         REGLAS ARTÍSTICAS:
         - Fusión: {styles}.
         - No traduzcas, usa la sonoridad propia del idioma.
         - Estructura dinámica y acordes American/Jazz/Pop complejos.
         """
-        
+
         prompt = f"Genera composición completa en {language} sobre '{theme}'. BPM: {bpm}, Key: {key}. Devuelve JSON con title, structure, lyrics, chords, vocal_direction, originality_score."
-        
+
         response_json = self.call_llm(prompt, system_prompt)
         try:
             data = json.loads(self._clean_json(response_json))
@@ -162,7 +163,7 @@ class ProductionAgent(MusicOSAgent):
     def produce(self, music_ir: MusicIR):
         system_prompt = "Eres el AGENTE DE PRODUCCIÓN de MUSIC OS. Diseña instrumentación, dinámica y espacio."
         prompt = f"Analiza composición: {music_ir.to_json()}. Diseña instrumentación, dinámicas y espacio. Devuelve JSON con instrumentation, dynamics, spatial."
-        
+
         response_json = self.call_llm(prompt, system_prompt)
         try:
             data = json.loads(self._clean_json(response_json))
@@ -177,7 +178,7 @@ class LearningAgent(MusicOSAgent):
     def evolve(self, music_ir: MusicIR, history: list[dict]):
         system_prompt = "Eres el AGENTE DE APRENDIZAJE de MUSIC OS. Analiza el historial y evoluciona patrones."
         prompt = f"Historial: {json.dumps(history)}. Canción actual: {music_ir.to_json()}. Identifica patrones aprendidos y métricas de evolución. Devuelve JSON con learned_patterns, evolution_metrics."
-        
+
         response_json = self.call_llm(prompt, system_prompt)
         try:
             data = json.loads(self._clean_json(response_json))
@@ -213,28 +214,28 @@ class MusicOS:
         self.music_ir.lyrics["language"] = language
         self.music_ir.musical["bpm"] = bpm
         self.music_ir.musical["key"] = key
-        
+
         history = self._load_history()
-        
+
         # Inyectar memoria de sesiones pasadas ANTES de componer
         if history:
             last_entry = history[-1]
             self.music_ir.memory["learned_patterns"] = last_entry.get("memory", {}).get("learned_patterns", [])
             self.music_ir.memory["past_references"] = [h["metadata"]["title"] for h in history[-5:]]
-        
+
         self.director.set_goal(self.music_ir, theme, styles, creativity)
         self.composer.compose(self.music_ir)
         self.producer.produce(self.music_ir)
-        
+
         # Evolucionar patrones basados en la nueva composición
         self.learner.evolve(self.music_ir, history)
-        
+
         self._save_to_history(self.music_ir)
         return self.music_ir
 
     def export_midi(self, style_groove: str = "Pop/Indie"):
         """
-        Exportador MIDI Pro: Traduce acordes y estructuras a patrones rítmicos 
+        Exportador MIDI Pro: Traduce acordes y estructuras a patrones rítmicos
         y arpegios avanzados según el groove seleccionado.
         """
         midi = MIDIFile(1)
@@ -242,7 +243,7 @@ class MusicOS:
         time = 0
         bpm = self.music_ir.musical["bpm"]
         midi.addTempo(track, time, bpm)
-        
+
         # Diccionario avanzado de acordes (American/Jazz/Modal extensions)
         chord_map = {
             'C': [60, 64, 67], 'Cm': [60, 63, 67], 'Cmaj7': [60, 64, 67, 71], 'Cmaj9': [60, 64, 67, 71, 74],
@@ -259,11 +260,11 @@ class MusicOS:
             section_chords = self.music_ir.harmony["chords"].get(section, [])
             if not section_chords:
                 section_chords = ["Am9", "Fmaj7"] # Fallback seguro
-                
+
             for chord_str in section_chords:
                 clean_chord = chord_str.split('/')[0].strip()
                 notes = chord_map.get(clean_chord, [60, 64, 67, 71]) # Default a maj7
-                
+
                 # Generación de Groove Arpegiado / Rítmico Avanzado
                 if "Intro" in section or "Verso" in section:
                     # Estilo Arpegio / Jangly (The Smiths / Intros íntimas)
@@ -280,7 +281,7 @@ class MusicOS:
                     for note in notes:
                         midi.addNote(track, 0, note, time, 3.8, 105) # Acorde completo con pegada
                     time += 4
-        
+
         buffer = io.BytesIO()
         midi.writeFile(buffer)
         return buffer.getvalue()

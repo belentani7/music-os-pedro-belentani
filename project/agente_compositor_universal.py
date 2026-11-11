@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import io
 import json
 import sys
@@ -21,7 +22,7 @@ class AgenteCompositorUniversal:
     Integra principios artísticos de Lady Gaga, The Smiths, Anitta y Nathy Peluso.
     Diseñado para funcionar localmente con Ollama.
     """
-    
+
     def __init__(self, model_name="qwen2.5:7b"):
         self.model = model_name
         self.chord_map = self._build_robust_chord_map()
@@ -29,7 +30,7 @@ class AgenteCompositorUniversal:
     def _build_robust_chord_map(self):
         """Mapeo de notas MIDI con variaciones comunes para evitar errores de KeyError."""
         base_map = {
-            'C': [60, 64, 67], 'Cm': [60, 63, 67], 'Cmaj7': [60, 64, 67, 71], 
+            'C': [60, 64, 67], 'Cm': [60, 63, 67], 'Cmaj7': [60, 64, 67, 71],
             'Cm7': [60, 63, 67, 70], 'Cm9': [60, 63, 67, 70, 74],
             'Dm': [62, 65, 69], 'Dm7': [62, 65, 69, 72], 'Dm9': [62, 65, 69, 72, 76],
             'Em': [64, 67, 71], 'Em7': [64, 67, 71, 74],
@@ -62,7 +63,7 @@ class AgenteCompositorUniversal:
 
     def build_mega_prompt(self, language, styles, theme, bpm, key):
         """Construye el prompt de sistema para la composición nativa y fusión de estilos."""
-        
+
         phonetic_directives = {
             "Español": "REGLA DE ORO: Piensa nativamente en español. Usa fricativas y vibrantes (rr, ll, y) para actitud y tensión. Juega con el ritmo de las sílabas.",
             "Portugués": "REGLA DE ORO: Pense em português brasileiro nativo. Use vogais nasais (ão, em, am) para sustentar notas longas e consoantes oclusivas para percussão vocal.",
@@ -83,16 +84,16 @@ class AgenteCompositorUniversal:
         return f"""
         Eres el ALGORITMO DE COMPOSICIÓN UNIVERSAL v3.0.
         {phonetic_directives.get(language, phonetic_directives['Español'])}
-        
+
         CONTEXTO ARTÍSTICO (FUSIÓN):
         {selected_styles_desc}
-        
+
         PARÁMETROS:
         - Idioma: {language.upper()}
         - Tema: {theme}
         - BPM: {bpm}
         - Tonalidad: {key}
-        
+
         INSTRUCCIONES TÉCNICAS:
         1. Los acordes deben ser complejos (usa 7, 9, maj7, m7b5, alt).
         2. La estructura debe tener dinámicas extremas.
@@ -117,7 +118,7 @@ class AgenteCompositorUniversal:
         track = 0
         time = 0
         midi.addTempo(track, time, song_data.get('bpm', 105))
-        
+
         for section in song_data.get('structure', []):
             section_chords = song_data.get('chords', {}).get(section, [])
             for chord_str in section_chords:
@@ -130,10 +131,10 @@ class AgenteCompositorUniversal:
 # --- INTERFAZ STREAMLIT ---
 def run_app():
     st.set_page_config(page_title="Agente Compositor Universal", page_icon="🎵", layout="wide")
-    
+
     st.title("🎵 Agente Compositor Musical Universal")
     st.markdown("### El algoritmo de composición independiente para Pedro Belentani")
-    
+
     with st.sidebar:
         st.header("⚙️ Configuración")
         language = st.selectbox("Idioma Nativo", ["Español", "Portugués", "Inglés", "Catalán", "Francés"])
@@ -141,11 +142,11 @@ def run_app():
         bpm = st.slider("BPM (Tempo)", 60, 160, 105)
         key = st.selectbox("Tonalidad", ["Am", "C", "Dm", "G", "Em", "Fmaj7", "Bm"])
         model = st.text_input("Modelo Ollama", value="qwen2.5:7b")
-        
+
     theme = st.text_area("Concepto o Tema de la Canción", placeholder="Ej: La soledad de un astronauta en una discoteca abandonada...")
-    
+
     agent = AgenteCompositorUniversal(model_name=model)
-    
+
     if st.button("🚀 GENERAR OBRA MAESTRA", type="primary"):
         if not theme:
             st.warning("Por favor, introduce un tema.")
@@ -154,46 +155,46 @@ def run_app():
                 try:
                     prompt = agent.build_mega_prompt(language, styles, theme, bpm, key)
                     response = ollama.chat(
-                        model=model, 
+                        model=model,
                         messages=[
                             {'role': 'system', 'content': 'Eres un motor de composición. Devuelve SOLO JSON válido.'},
                             {'role': 'user', 'content': prompt}
                         ],
                         format='json'
                     )
-                    
+
                     clean_json = agent.clean_json_from_llm(response['message']['content'])
                     song_data = json.loads(clean_json)
-                    
+
                     st.success("✅ ¡Obra Maestra Generada!")
-                    
+
                     # Mostrar Resultados
                     st.subheader(f"🎶 {song_data.get('title', 'Sin Título')}")
                     st.info(f"🗣️ **Dirección Vocal:** {song_data.get('vocal_direction', '')}")
-                    
+
                     for section in song_data.get('structure', []):
                         with st.expander(f"🎼 {section.upper()}"):
                             chords = song_data.get('chords', {}).get(section, [])
                             lyrics = song_data.get('lyrics', {}).get(section, "(Instrumental)")
                             st.markdown(f"**Acordes:** `{' | '.join(chords)}`")
                             st.markdown(f"**Letra:**\n{lyrics}")
-                    
+
                     # Descargas
                     col1, col2 = st.columns(2)
-                    
+
                     # TXT
                     txt_content = f"TÍTULO: {song_data.get('title')}\nIDIOMA: {language}\nBPM: {bpm} | KEY: {key}\n\n"
                     for section in song_data.get('structure', []):
                         txt_content += f"[{section}]\nAcordes: {' | '.join(song_data.get('chords', {}).get(section, []))}\n{song_data.get('lyrics', {}).get(section, '')}\n\n"
-                    
+
                     col1.download_button("📄 Descargar Letra (TXT)", txt_content, f"{song_data.get('title')}.txt")
-                    
+
                     # MIDI
                     midi_obj = agent.generate_midi(song_data)
                     midi_buffer = io.BytesIO()
                     midi_obj.writeFile(midi_buffer)
                     col2.download_button("🎹 Descargar MIDI", midi_buffer.getvalue(), f"{song_data.get('title')}.mid")
-                    
+
                 except Exception as e:
                     st.error(f"❌ Error: {e}. Asegúrate de que Ollama esté corriendo con el modelo {model}.")
 

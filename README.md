@@ -43,3 +43,7 @@ conservadas, pero no todas forman parte de la experiencia actual.
 ## Licencia
 
 Consulta el archivo `LICENSE` para conocer los términos aplicables.
+
+
+## Producto
+Véase `plataforma/OFERTA.md`, `plataforma/precios.json`, `plataforma/ONEPAGER.md`.
