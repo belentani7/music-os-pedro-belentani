@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
@@ -20,7 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - name: Scan conflict markers
         run: |
-          if git grep -E '^(<<<<<<< |=======$|>>>>>>> )' -- '*.:("*' ; then
+          if git grep -E '^(<<<<<<< |=======$|>>>>>>> )' -- . ; then
             echo "Marcadores de conflicto detectados"; exit 1; fi

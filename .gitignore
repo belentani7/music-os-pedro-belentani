@@ -69,3 +69,9 @@ secrets.json
 .npmrc
 .pypirc
 .user_env
+
+# Local composition history and test reports
+music_os_history.json
+project/music_os_history.json
+stress_test_report.json
+project/stress_test_report.json
