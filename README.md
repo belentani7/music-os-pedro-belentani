@@ -47,3 +47,9 @@ Consulta el archivo `LICENSE` para conocer los términos aplicables.
 
 ## Producto
 Véase `plataforma/OFERTA.md`, `plataforma/precios.json`, `plataforma/ONEPAGER.md`.
+
+## Publicación de la web
+
+Vercel publica `site/` como HTML estático sin compilación de Node. La misma portada en la raíz permite la publicación de Pages; ninguna de estas portadas ejecuta el motor local. El entorno requiere Python 3.9 o posterior (CI verificado con 3.12).
+
+Pruebas sin modelo local: `python -m unittest discover -s tests -p test_release.py -v`, con `midiutil==1.2.1` instalado. Incluyen MIDI real, historial temporal, errores del proveedor y contrato de publicación. Las generaciones de prueba usan demo explícita.
