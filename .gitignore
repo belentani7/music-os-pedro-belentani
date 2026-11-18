@@ -11,3 +11,12 @@ __pycache__/
 .DS_Store
 .venv/
 venv/
+
+# Generated local artifacts: do not commit
+node_modules/
+.nuxt/
+.turbo/
+.pytest_cache/
+*.py[cod]
+.aider.tags.cache*/
+.aider.chat.history.md
