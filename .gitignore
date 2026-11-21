@@ -1,4 +1,13 @@
-﻿node_modules/
+﻿# Generated OS metadata, Python bytecode, and HTML reports
+._*
+__MACOSX/
+Thumbs.db
+Desktop.ini
+desktop.ini
+htmlcov/
+playwright-report/
+
+node_modules/
 dist/
 build/
 .next/
