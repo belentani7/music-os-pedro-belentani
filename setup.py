@@ -1,9 +1,9 @@
-from setuptools import setup, find_packages
+"""Compatibilidad: la configuración canónica vive en pyproject.toml.
 
-setup(
-    name="music-os-pedro-belentani",
-    version="0.1.0",
-    packages=find_packages(),
-    description="Proyecto music-os-pedro-belentani",
-    python_requires=">=3.9",
-)
+``pip install -e .`` usa la sección [project] de pyproject.toml; este shim
+evita que herramientas antiguas fallen al leer setup.py.
+"""
+
+from setuptools import setup
+
+setup()

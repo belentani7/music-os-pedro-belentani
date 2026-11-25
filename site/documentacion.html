@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentación · MUSIC OS</title><meta name="description" content="Cómo instalar, generar, exportar y verificar proyectos en MUSIC OS: CLI, MusicIR, MIDI, historial y pruebas."><meta name="theme-color" content="#090b10"><link rel="stylesheet" href="style.css"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23090b10'/%3E%3Cpath d='M8 23V9l8 8 8-8v14' fill='none' stroke='%23ff9aac' stroke-width='3'/%3E%3C/svg%3E"></head>
+<body><a class="skip-link" href="#main">Saltar al contenido</a>
+<header class="site-header"><a class="brand" href="./">MUSIC<span>—</span>OS</a><nav class="site-nav" aria-label="Secciones"><a href="index.html">Inicio</a><a href="documentacion.html" aria-current="page">Documentación</a><a href="accesibilidad.html">Accesibilidad</a><a href="privacidad.html">Privacidad</a></nav><a class="source-link" href="https://github.com/belentani7/music-os-pedro-belentani">Código en GitHub</a></header>
+<main id="main">
+<div class="doc-header"><p class="eyebrow">REFERENCIA</p><h1>Documentación de MUSIC OS</h1><p>Instalar, generar, exportar y verificar. Todo lo de esta página se ejecuta en tu equipo.</p></div>
+<div class="doc-body">
+<section><h2>1 · Instalación</h2><pre><code>git clone https://github.com/belentani7/music-os-pedro-belentani.git
+cd music-os-pedro-belentani
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+python -m pip install -r requirements.txt</code></pre><p>Python 3.10 o superior. El núcleo y la CLI solo necesitan <code>midiutil</code> y <code>ollama</code>; Streamlit, pandas y plotly son para la interfaz.</p></section>
+<section><h2>2 · Interfaz</h2><pre><code>streamlit run project/music_os_ui.py</code></pre><ul><li><strong>Modo demo:</strong> activa «Usar modo demo» en la barra lateral. No llama a ningún modelo; el proyecto es un ejemplo fijo del código y aparece marcado como simulación.</li><li><strong>Modelo real:</strong> con Ollama en marcha (<code>ollama serve</code>) y el modelo descargado (<code>ollama pull qwen2.5:7b</code>). Si el modelo falla, la app lo dice y no sustituye el resultado por la demo.</li></ul></section>
+<section><h2>3 · CLI</h2><pre><code>python -m tools.music_os_cli --help
+python -m tools.music_os_cli generate --theme "alienación digital" --demo --out salida/
+python -m tools.music_os_cli verify salida/Eclipse_en_la_Ciudad.mid
+python -m tools.music_os_cli inspect salida/Eclipse_en_la_Ciudad.musicir.json
+python -m tools.music_os_cli history --limit 5</code></pre><p><code>generate</code> escribe cuatro archivos: el proyecto <code>.musicir.json</code>, la maqueta <code>.mid</code>, la hoja de sesión <code>.txt</code> y un piano-roll <code>.svg</code> generado a partir del propio MIDI.</p></section>
+<section><h2>4 · MusicIR</h2><p>Un único objeto describe la canción: <code>metadata</code>, <code>concept</code>, <code>musical</code>, <code>lyrics</code>, <code>harmony</code>, <code>melody</code>, <code>arrangement</code>, <code>production</code>, <code>evaluation</code> y <code>memory</code>. <code>MusicIR.from_json</code> migra documentos antiguos y <code>validate()</code> comprueba BPM, compás, tonalidad, secciones, acordes y letra.</p><ul><li>Los documentos sin <code>schema_version</code> se migran al esquema 2.0.</li><li>Los acordes se interpretan con <code>project/music_theory.py</code> (una sola fuente de verdad).</li><li>Un IR inválido <strong>no</strong> se exporta: la exportación falla con el motivo.</li></ul></section>
+<section><h2>5 · MIDI</h2><table><thead><tr><th>Elemento</th><th>Detalle</th></tr></thead><tbody><tr><td>Formato</td><td>SMF tipo 1, varias pistas</td></tr><tr><td>Pista 0</td><td>Tempo, compás y armadura</td></tr><tr><td>Pista 1</td><td>Armonía (GM 5, piano eléctrico)</td></tr><tr><td>Pista 2</td><td>Bajo (GM 39, synth bass)</td></tr><tr><td>Grooves</td><td><code>auto</code>, <code>arpeggio</code>, <code>pad</code>, <code>stab</code></td></tr></tbody></table><p class="note">El MIDI es un boceto de arreglo: no contiene audio, ni voz, ni mezcla. Para convertirlo en sonido necesitas un DAW o un sintetizador.</p></section>
+<section><h2>6 · Verificación</h2><pre><code>python -m unittest discover -s tests -p "test_*.py" -v
+python -m compileall -q .
+ruff check .</code></pre><p>Las pruebas cubren el ciclo demo, la exportación MIDI (cabecera, pistas, grooves distintos, lectura de vuelta), la recuperación del historial corrupto, la migración de MusicIR, el fallo de proveedor y el contrato de publicación del sitio.</p></section>
+<section><h2>7 · Privacidad</h2><p>Nada sale de tu equipo salvo que tú lo envíes. Ollama responde en <code>localhost</code>. El historial es un archivo local: bórralo desde la app o con <code>python -m tools.music_os_cli clear-history</code>. Ver <a href="privacidad.html">Privacidad y datos</a>.</p></section>
+</div></main>
+<footer><span>BELENTANI · MUSIC OS</span><nav aria-label="Pie"><a href="index.html">Inicio</a><a href="documentacion.html">Documentación</a><a href="accesibilidad.html">Accesibilidad</a><a href="privacidad.html">Privacidad</a><a href="https://github.com/belentani7/music-os-pedro-belentani/blob/master/LICENSE">Licencia</a></nav></footer></body></html>
