@@ -10,7 +10,11 @@
 
 ## Comandos
 
-- (sin scripts declarados; documenta aquí los comandos reales)
+- `python -m pip install -r requirements-dev.txt`
+- `python -m unittest discover -s tests -p "test_*.py" -v`
+- `ruff check . && ruff format --check .`
+- `streamlit run project/music_os_ui.py` (interfaz, sin necesidad de modelo)
+- `python -m tools.music_os_cli --help` (CLI)
 
 ## Reglas
 

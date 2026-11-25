@@ -45,7 +45,20 @@ Registro brand y product. Pre-ship checklist obligatoria:
 
 ## Comandos
 
-- Despliegue: copiar archivos (cero build) salvo que el repo tenga package.json o equivalent.
+```bash
+python -m pip install -r requirements-dev.txt
+python -m unittest discover -s tests -p "test_*.py" -v
+ruff check . && ruff format --check .
+streamlit run project/music_os_ui.py
+python -m tools.music_os_cli --help
+```
+
+- Despliegue web: `site/` estático (cero build de Node), publicado por
+  `vercel.json`; la misma portada en la raíz sirve para Pages.
+- Artefactos locales (`music_os_history.json`, `salida/`) están en `.gitignore`:
+  nunca se versionan.
+- El modo demo debe seguir siendo **explícito** y etiquetado como simulación.
+  Un fallo del modelo real nunca se sustituye por la demo.
 
 ## Convenciones de commit
 

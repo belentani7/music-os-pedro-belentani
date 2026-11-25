@@ -1,0 +1,16 @@
+# Tema del taller MUSIC OS: oscuro por defecto para garantizar contraste AA
+# sobre el fondo #090b10. Streamlit respeta estos valores también en el
+# servidor desplegado; no depende del navegador de cada visitante.
+[theme]
+base = "dark"
+primaryColor = "#ff9aac"
+backgroundColor = "#090b10"
+secondaryBackgroundColor = "#11151d"
+textColor = "#f5f7fa"
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

@@ -1,31 +1,38 @@
-﻿# Generated OS metadata, Python bytecode, and HTML reports
+# Metadatos del sistema operativo
 ._*
 __MACOSX/
 Thumbs.db
 Desktop.ini
-desktop.ini
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
 htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Node (no hay build: package-lock.json documenta la ausencia de dependencias)
+node_modules/
+.vercel/
+.next/
+
+# Informes de navegador
 playwright-report/
 
-node_modules/
-dist/
-build/
-.next/
-.vercel/
-__pycache__/
-*.pyc
+# Secretos y entorno
 .env
 .env.local
 *.log
-.DS_Store
-.venv/
-venv/
 
-# Generated local artifacts: do not commit
-node_modules/
-.nuxt/
-.turbo/
-.pytest_cache/
-*.py[cod]
-.aider.tags.cache*/
-.aider.chat.history.md
+# Generado en local por la app y la CLI: nunca versionar
+music_os_history.json
+*.corrupt-*
+stress_test_report.json
+salida/

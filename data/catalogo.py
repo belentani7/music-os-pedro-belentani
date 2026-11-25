@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # catalogo.py — music-os-pedro-belentani
 # Generado por repo_forge.py (create-only)
 
